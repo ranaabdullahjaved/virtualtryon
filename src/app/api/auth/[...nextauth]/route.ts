@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google"; // <-- Add this line
+import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import { compare } from "bcryptjs";
@@ -17,17 +17,20 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // Find user by email
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
         if (!user) return null;
 
-        // Compare password (assuming you store hashed passwords)
         const isValid = await compare(credentials.password, user.password);
         if (!isValid) return null;
 
-        return user;
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role, // Make sure this is included
+        };
       },
     }),
     GoogleProvider({
@@ -36,13 +39,18 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      // Attach user role to session
+    async session({ session, token }) {
       if (session?.user) {
-        session.user.role = user.role;
-        session.user.id = user.id;
+        session.user.role = token.role;
+        session.user.id = token.sub;
       }
       return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+      }
+      return token;
     },
   },
   session: {

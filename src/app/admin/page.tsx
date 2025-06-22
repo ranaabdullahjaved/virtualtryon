@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -10,86 +10,126 @@ export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Redirect non-admins
   useEffect(() => {
-    if (status === "loading") return; // Wait for session to load
-    if (!session) {
+    if (status === "loading") return;
+    if (!session || session.user.role !== "admin") {
       router.push("/auth");
-    } else if (session.user.role !== "admin") {
-      router.push("/brands");
     }
   }, [session, status, router]);
 
   // Brand form state
   const [brandName, setBrandName] = useState("");
-  const [brandLogo, setBrandLogo] = useState("");
+  const [brandLogoFile, setBrandLogoFile] = useState<File | null>(null);
   const [brandMsg, setBrandMsg] = useState("");
+  const [isBrandLoading, setIsBrandLoading] = useState(false);
 
   // Product form state
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
   const [selectedBrand, setSelectedBrand] = useState("");
+  const [productImageFile, setProductImageFile] = useState<File | null>(null);
   const [product, setProduct] = useState({
     name: "",
     description: "",
     price: "",
-    imageUrl: "",
     stock: "",
     virtualTryOnFile: "",
   });
   const [productMsg, setProductMsg] = useState("");
+  const [isProductLoading, setIsProductLoading] = useState(false);
 
-  // Fetch brands for product form
   useEffect(() => {
     fetch("/api/brands")
       .then((res) => res.json())
       .then(setBrands);
-  }, []);
+  }, [isBrandLoading]); // Refetch brands when a new one is added
 
-  // Add brand handler
-  const handleAddBrand = async (e: any) => {
-    e.preventDefault();
-    setBrandMsg("");
-    const res = await fetch("/api/brands", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: brandName, logoUrl: brandLogo }),
-    });
-    if (res.ok) {
-      setBrandMsg("Brand added!");
-      setBrandName("");
-      setBrandLogo("");
-    } else {
-      setBrandMsg("Error adding brand.");
+  const handleBrandFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setBrandLogoFile(e.target.files[0]);
     }
   };
 
-  // Add product handler
+  const handleProductFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setProductImageFile(e.target.files[0]);
+    }
+  };
+
+  const uploadFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) {
+      throw new Error("File upload failed");
+    }
+    const data = await res.json();
+    return data.url;
+  };
+
+  const handleAddBrand = async (e: any) => {
+    e.preventDefault();
+    if (!brandLogoFile) {
+      setBrandMsg("Please select a logo file.");
+      return;
+    }
+    setIsBrandLoading(true);
+    setBrandMsg("");
+    try {
+      const logoUrl = await uploadFile(brandLogoFile);
+      const res = await fetch("/api/brands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: brandName, logoUrl }),
+      });
+      if (res.ok) {
+        setBrandMsg("Brand added successfully!");
+        setBrandName("");
+        setBrandLogoFile(null);
+      } else {
+        throw new Error("Failed to add brand");
+      }
+    } catch (error) {
+      setBrandMsg("Error adding brand.");
+    } finally {
+      setIsBrandLoading(false);
+    }
+  };
+
   const handleAddProduct = async (e: any) => {
     e.preventDefault();
+    if (!productImageFile) {
+      setProductMsg("Please select a product image.");
+      return;
+    }
+    setIsProductLoading(true);
     setProductMsg("");
-    const res = await fetch("/api/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...product,
-        price: parseFloat(product.price),
-        stock: parseInt(product.stock),
-        imageUrl: product.imageUrl ? [product.imageUrl] : [],
-        brandId: selectedBrand,
-      }),
-    });
-    if (res.ok) {
-      setProductMsg("Product added!");
-      setProduct({
-        name: "",
-        description: "",
-        price: "",
-        imageUrl: "",
-        stock: "",
-        virtualTryOnFile: "",
+    try {
+      const imageUrl = await uploadFile(productImageFile);
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...product,
+          price: parseFloat(product.price),
+          stock: parseInt(product.stock),
+          imageUrl: [imageUrl],
+          brandId: selectedBrand,
+        }),
       });
-    } else {
+      if (res.ok) {
+        setProductMsg("Product added successfully!");
+        setProduct({ name: "", description: "", price: "", stock: "", virtualTryOnFile: "" });
+        setProductImageFile(null);
+      } else {
+        throw new Error("Failed to add product");
+      }
+    } catch (error) {
       setProductMsg("Error adding product.");
+    } finally {
+      setIsProductLoading(false);
     }
   };
 
@@ -109,14 +149,19 @@ export default function AdminPage() {
               onChange={(e) => setBrandName(e.target.value)}
               required
             />
-            <Input
-              placeholder="Logo URL"
-              value={brandLogo}
-              onChange={(e) => setBrandLogo(e.target.value)}
-              required
-            />
-            <Button type="submit">Add Brand</Button>
-            {brandMsg && <div className="text-green-600">{brandMsg}</div>}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Brand Logo</label>
+              <Input
+                type="file"
+                onChange={handleBrandFileChange}
+                required
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+              />
+            </div>
+            <Button type="submit" disabled={isBrandLoading}>
+              {isBrandLoading ? "Adding..." : "Add Brand"}
+            </Button>
+            {brandMsg && <div className={brandMsg.includes("Error") ? "text-red-600" : "text-green-600"}>{brandMsg}</div>}
           </form>
         </Card>
         {/* Add Product */}
@@ -150,15 +195,20 @@ export default function AdminPage() {
             <Input
               placeholder="Price"
               type="number"
+              step="0.01"
               value={product.price}
               onChange={(e) => setProduct({ ...product, price: e.target.value })}
               required
             />
-            <Input
-              placeholder="Image URL"
-              value={product.imageUrl}
-              onChange={(e) => setProduct({ ...product, imageUrl: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+              <Input
+                type="file"
+                onChange={handleProductFileChange}
+                required
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+            </div>
             <Input
               placeholder="Stock"
               type="number"
@@ -171,8 +221,10 @@ export default function AdminPage() {
               value={product.virtualTryOnFile}
               onChange={(e) => setProduct({ ...product, virtualTryOnFile: e.target.value })}
             />
-            <Button type="submit">Add Product</Button>
-            {productMsg && <div className="text-green-600">{productMsg}</div>}
+            <Button type="submit" disabled={isProductLoading}>
+              {isProductLoading ? "Adding..." : "Add Product"}
+            </Button>
+            {productMsg && <div className={productMsg.includes("Error") ? "text-red-600" : "text-green-600"}>{productMsg}</div>}
           </form>
         </Card>
       </div>

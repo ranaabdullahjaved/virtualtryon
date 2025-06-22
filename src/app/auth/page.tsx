@@ -35,26 +35,39 @@ export default function AuthPage() {
     e.preventDefault();
     setIsLoading(true);
     setLoginError("");
+    
     const res = await signIn("credentials", {
       redirect: false,
       email: loginForm.email,
       password: loginForm.password,
     });
+    
     setIsLoading(false);
   
     if (res?.error) {
       setLoginError("Invalid email or password");
     } else {
-      // Wait a moment for session to update
+      // Add a longer delay and better error handling
       setTimeout(async () => {
-        const sessionRes = await fetch("/api/auth/session");
-        const session = await sessionRes.json();
-        if (session?.user?.role === "admin") {
-          window.location.href = "/admin";
-        } else {
+        try {
+          const sessionRes = await fetch("/api/auth/session");
+          const session = await sessionRes.json();
+          
+          console.log("Session after login:", session); // Debug log
+          
+          if (session?.user?.role === "admin") {
+            console.log("Redirecting to admin..."); // Debug log
+            window.location.href = "/admin";
+          } else {
+            console.log("Redirecting to brands..."); // Debug log
+            window.location.href = "/brands";
+          }
+        } catch (error) {
+          console.error("Error fetching session:", error);
+          // Fallback redirect
           window.location.href = "/brands";
         }
-      }, 500); // 500ms delay
+      }, 1000); // Increased delay to 1 second
     }
   };
 

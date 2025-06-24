@@ -1,14 +1,21 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Shirt, ShoppingBag, UserCheck } from "lucide-react";
 import styles from "./auth/auth.module.css";
 
 export default function HomePage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/brands");
+    }
+  }, [status, router]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 relative overflow-hidden p-4">
@@ -28,18 +35,18 @@ export default function HomePage() {
         <p className="text-xl md:text-2xl text-gray-700 mb-8 font-medium">
           The ultimate virtual try-on and shopping experience. Try on outfits, get styled, and shop with confidence!
         </p>
-        {session ? (
+        {status === "authenticated" ? (
           <div className="flex flex-col items-center gap-4">
             <span className="text-lg text-gray-800 flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-green-500" />
-              Welcome, {session.user?.name || session.user?.email}!
+              Welcome, {session?.user?.name || session?.user?.email}!
             </span>
             <Button
               size="lg"
               className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 animate-bounce"
-              onClick={() => router.push("/try-on")}
+              onClick={() => router.push("/brands")}
             >
-              Try On Now
+              Start Shopping
             </Button>
           </div>
         ) : (
@@ -55,7 +62,7 @@ export default function HomePage() {
               variant="outline"
               size="lg"
               className="border-2 border-purple-400 text-purple-700 font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-purple-50 transition-all duration-300"
-              onClick={() => router.push("/auth")}
+              onClick={() => router.push("/auth?tab=signup")}
             >
               Sign Up
             </Button>

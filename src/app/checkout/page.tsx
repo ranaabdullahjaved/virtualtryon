@@ -14,6 +14,8 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedCart, setSubmittedCart] = useState<any[]>([]);
+  const [submittedTotal, setSubmittedTotal] = useState(0);
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -35,6 +37,9 @@ export default function CheckoutPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+
+    setSubmittedCart(cart);
+    setSubmittedTotal(total);
 
     try {
       const response = await fetch('/api/orders', {
@@ -69,11 +74,11 @@ export default function CheckoutPage() {
           <p className="mb-6">Thank you for your order, {form.name}! A confirmation has been sent to {form.email}.</p>
           <h2 className="text-xl font-semibold mb-2">Order Summary</h2>
           <ul className="mb-4 text-left">
-            {cart.map(item => (
+            {submittedCart.map(item => (
               <li key={item.productId} className="mb-1">{item.quantity} × {item.name} (${item.price.toFixed(2)} each)</li>
             ))}
           </ul>
-          <div className="font-bold text-lg mb-2">Total Paid: ${total.toFixed(2)}</div>
+          <div className="font-bold text-lg mb-2">Total Paid: ${submittedTotal.toFixed(2)}</div>
           <div className="text-gray-500">Shipping to: {form.address}</div>
         </Card>
       </div>

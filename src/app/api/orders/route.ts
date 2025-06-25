@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       select: { id: true },
     });
 
-    if (!user) {
+    if (!user || !(user as any).id) {
       return new NextResponse("User not found", { status: 404 });
     }
 
@@ -91,9 +91,17 @@ export async function POST(req: Request) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
+    // Check stock for all products first
+    for (const item of cart) {
+      const product = await prisma.product.findUnique({ where: { id: item.productId } });
+      if (!product || product.stock < item.quantity) {
+        return new NextResponse(`Insufficient stock for ${item.name}`, { status: 400 });
+      }
+    }
+
     const order = await prisma.order.create({
       data: {
-        userId: user.id,
+        userId: (user as any).id,
         totalAmount: parseFloat(totalAmount),
         shippingAddress: shippingAddress,
         status: "pending",
@@ -110,8 +118,16 @@ export async function POST(req: Request) {
       },
     });
 
+    // Decrement stock for each product
+    for (const item of cart) {
+      await prisma.product.update({
+        where: { id: item.productId },
+        data: { stock: { decrement: item.quantity } },
+      });
+    }
+
     return NextResponse.json(order, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[ORDER_POST]", error);
     return new NextResponse("Internal error", { status: 500 });
   }

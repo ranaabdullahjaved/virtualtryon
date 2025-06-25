@@ -32,3 +32,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+// Handles deleting a brand
+export async function DELETE(request: NextRequest) {
+  try {
+    const url = new URL(request.url);
+    const brandId = url.searchParams.get("id");
+    if (!brandId) {
+      return NextResponse.json({ error: "Brand ID is required" }, { status: 400 });
+    }
+    // Optionally: delete all products for this brand first, or use cascade in schema
+    await prisma.brand.delete({ where: { id: brandId } });
+    return NextResponse.json({ message: "Brand deleted" });
+  } catch (error) {
+    console.error("Error deleting brand:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}

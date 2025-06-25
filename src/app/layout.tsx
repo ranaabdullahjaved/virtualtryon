@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SessionProvider>
           <CartProvider>
             <AuthenticatedComponents cartOpen={cartOpen} setCartOpen={setCartOpen} />
-            {children}
+          {children}
           </CartProvider>
         </SessionProvider>
       </body>

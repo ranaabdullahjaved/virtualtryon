@@ -7,6 +7,10 @@ export async function POST(request: Request) {
   try {
     const { name, email, password } = await request.json();
 
+    if (!name || !email || !password) {
+      return new Response(JSON.stringify({ error: "All fields are required" }), { status: 400 });
+    }
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -16,18 +20,18 @@ export async function POST(request: Request) {
     // Hash the password
     const hashedPassword = await hash(password, 10);
 
-    // Create user
+    // Create user (role defaults to "customer" per your schema)
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        // role: "customer" // Optional, since default is "customer"
       },
     });
 
     return new Response(JSON.stringify({ message: "User registered", user: { id: user.id, email: user.email } }), { status: 201 });
   } catch (error) {
+    console.error("Registration error:", error);
     return new Response(JSON.stringify({ error: "Registration failed" }), { status: 500 });
   }
 }

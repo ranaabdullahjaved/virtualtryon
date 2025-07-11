@@ -130,7 +130,7 @@ const FUNCTIONS = [
 ];
 
 // Function implementations
-async function getProductRecommendations(category: string, style?: string, _price_range?: string) {
+async function getProductRecommendations(category: string, style?: string) {
   try {
     const whereClause: Record<string, unknown> = {
       name: { contains: category, mode: 'insensitive' }
@@ -352,8 +352,7 @@ export async function POST(req: NextRequest) {
         case 'get_product_recommendations':
           functionResult = await getProductRecommendations(
             functionArgs.category,
-            functionArgs.style,
-            functionArgs.price_range
+            functionArgs.style
           );
           break;
         case 'get_brand_info':

@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff, Mail, Lock, User, Github, Chrome } from "lucide-react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);

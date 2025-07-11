@@ -23,11 +23,11 @@ export async function GET() {
 
     const user = await Promise.race([timeoutPromise, queryPromise]);
 
-    if (!user) {
+    if (!user || typeof user !== "object" || user === null || !("id" in user) || typeof user.id !== "string") {
       return new NextResponse("User not found", { status: 404 });
     }
 
-    // Optimize the orders query by limiting fields and adding pagination
+    // Now TypeScript knows user.id exists and is a string
     const orders = await prisma.order.findMany({
       where: { userId: user.id },
       select: {
@@ -58,8 +58,8 @@ export async function GET() {
 
     return NextResponse.json(orders);
   } catch (error) {
-    console.error("[ORDERS_GET]", error);
-    if (error.message === "Database timeout") {
+    console.error("[ORDERS_GET]", error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.message === "Database timeout") {
       return new NextResponse("Request timeout", { status: 504 });
     }
     return new NextResponse("Internal error", { status: 500 });

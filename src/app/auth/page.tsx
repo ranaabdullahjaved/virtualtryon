@@ -1,5 +1,4 @@
 "use client";
-import styles from './auth.module.css';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,6 @@ export default function AuthPage() {
   const [loginError, setLoginError] = useState("");
   const [signupError, setSignupError] = useState("");
   const [signupSuccess, setSignupSuccess] = useState("");
-  const router = useRouter();
 
   // Login form state
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });

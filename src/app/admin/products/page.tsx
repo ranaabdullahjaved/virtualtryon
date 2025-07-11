@@ -9,9 +9,9 @@ import { Card } from "@/components/ui/card";
 export default function AdminProductsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [brands, setBrands] = useState<any[]>([]);
+  const [brands, setBrands] = useState<unknown[]>([]);
   const [selectedBrand, setSelectedBrand] = useState("");
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<unknown[]>([]);
   const [form, setForm] = useState({ name: "", description: "", price: "", imageUrl: "", stock: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,7 +34,7 @@ export default function AdminProductsPage() {
       const res = await fetch("/api/brands");
       if (!res.ok) throw new Error("Failed to fetch brands");
       setBrands(await res.json());
-    } catch (e) {
+    } catch {
       setError("Failed to fetch brands");
     } finally {
       setLoading(false);
@@ -53,12 +53,13 @@ export default function AdminProductsPage() {
       const stockMap: { [id: string]: number } = {};
       data.products.forEach((p: unknown) => {
         if (typeof p === 'object' && p !== null && 'id' in p && 'stock' in p) {
-          stockMap[(p as any).id] = (p as any).stock;
+          const prod = p as { id: string; stock: number };
+          stockMap[prod.id] = prod.stock;
         }
       });
       setLocalStock(stockMap);
       setDirtyStock({});
-    } catch (e) {
+    } catch {
       setError("Failed to fetch products");
     } finally {
       setLoading(false);
@@ -117,7 +118,7 @@ export default function AdminProductsPage() {
       setProductImagePreview("");
       setSuccess("Product added!");
       fetchProducts(selectedBrand);
-    } catch (e) {
+    } catch {
       setError("Failed to add product");
     } finally {
       setLoading(false);
@@ -134,7 +135,7 @@ export default function AdminProductsPage() {
       if (!res.ok) throw new Error("Failed to delete product");
       setSuccess("Product deleted!");
       fetchProducts(selectedBrand);
-    } catch (e) {
+    } catch {
       setError("Failed to delete product");
     } finally {
       setLoading(false);
@@ -161,7 +162,7 @@ export default function AdminProductsPage() {
       setSuccess("Stock updated!");
       setDirtyStock(prev => ({ ...prev, [id]: false }));
       fetchProducts(selectedBrand);
-    } catch (e) {
+    } catch {
       setError("Failed to update stock");
     } finally {
       setLoading(false);
@@ -179,9 +180,11 @@ export default function AdminProductsPage() {
           onChange={e => setSelectedBrand(e.target.value)}
         >
           <option value="">-- Select a brand --</option>
-          {brands.map((brand: any) => (
-            <option key={brand.id} value={brand.id}>{brand.name}</option>
-          ))}
+          {brands.map((brand: unknown) => {
+            if (typeof brand !== 'object' || brand === null || !('id' in brand) || !('name' in brand)) return null;
+            const b = brand as { id: string; name: string };
+            return <option key={b.id} value={b.id}>{b.name}</option>;
+          })}
         </select>
       </div>
       {selectedBrand && (
@@ -237,6 +240,7 @@ export default function AdminProductsPage() {
               const p = product as { id: string; name: string; description: string; price: number; imageUrl: string[]; stock: number };
               return (
                 <Card key={p.id} className="flex flex-col items-center p-6">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.imageUrl?.[0]} alt={p.name} className="w-20 h-20 object-contain mb-4" />
                   <div className="font-bold text-lg mb-2">{p.name}</div>
                   <div className="text-gray-500 mb-2">{p.description}</div>

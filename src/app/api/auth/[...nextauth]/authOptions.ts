@@ -60,8 +60,10 @@ export const authOptions = {
     },
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session?.user) {
-        (session.user as typeof session.user & { role?: string; id?: string }).role = token.role;
-        (session.user as typeof session.user & { role?: string; id?: string }).id = (typeof token.sub === 'string' ? token.sub : undefined) as string | undefined;
+        (session.user as typeof session.user & { role?: string; id?: string }).role =
+          typeof token.role === "string" ? token.role : undefined;
+        (session.user as typeof session.user & { role?: string; id?: string }).id =
+          typeof token.sub === "string" ? token.sub : undefined;
       }
       return session;
     },

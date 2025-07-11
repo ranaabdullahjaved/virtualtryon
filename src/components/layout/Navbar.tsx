@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { useCart } from "../product/CartContext";
 import { ShoppingBag, LogOut, History, Store, User } from "lucide-react";
 
-const Navbar = ({ setCartOpen }: { setCartOpen: (open: boolean) => void }) => {
+const Navbar = ({ cartOpen, setCartOpen }: { cartOpen: boolean; setCartOpen: (open: boolean) => void }) => {
   const pathname = usePathname();
   const { cart } = useCart();
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);

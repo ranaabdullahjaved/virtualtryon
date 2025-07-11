@@ -30,8 +30,8 @@ function AuthenticatedComponents({ cartOpen, setCartOpen }: { cartOpen: boolean;
 
   return (
     <>
-      <Navbar cartOpen={cartOpen} setCartOpen={setCartOpen} />
-      <CartButton cartOpen={cartOpen} setCartOpen={setCartOpen} />
+      <Navbar setCartOpen={setCartOpen} />
+      <CartButton setCartOpen={setCartOpen} />
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
       <ChatbotButton />
     </>

@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 function getProductIdFromRequest(request: NextRequest): string | undefined {
   const url = new URL(request.url);
   const segments = url.pathname.split("/");
-  return segments[segments.length - 2];
+  return segments[segments.length - 1];
 }
 
 export async function GET(request: NextRequest) {

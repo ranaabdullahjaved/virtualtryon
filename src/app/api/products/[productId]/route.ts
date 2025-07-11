@@ -3,11 +3,15 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { productId: string } }
-) {
-  const { productId } = params;
+// Helper to extract productId from the URL
+function getProductIdFromRequest(request: NextRequest): string | undefined {
+  const url = new URL(request.url);
+  const segments = url.pathname.split("/");
+  return segments[segments.length - 2];
+}
+
+export async function GET(request: NextRequest) {
+  const productId = getProductIdFromRequest(request);
 
   if (!productId) {
     return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
@@ -31,11 +35,8 @@ export async function GET(
 }
 
 // Handles deleting a product
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { productId: string } }
-) {
-  const { productId } = params;
+export async function DELETE(request: NextRequest) {
+  const productId = getProductIdFromRequest(request);
   if (!productId) {
     return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
   }
@@ -49,11 +50,8 @@ export async function DELETE(
 }
 
 // Handles updating product stock
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { productId: string } }
-) {
-  const { productId } = params;
+export async function PATCH(request: NextRequest) {
+  const productId = getProductIdFromRequest(request);
   if (!productId) {
     return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
   }
@@ -74,11 +72,8 @@ export async function PATCH(
 }
 
 // Handles decrementing product stock by 1 (for Buy Now)
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { productId: string } }
-) {
-  const { productId } = params;
+export async function POST(request: NextRequest) {
+  const productId = getProductIdFromRequest(request);
   if (!productId) {
     return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
   }

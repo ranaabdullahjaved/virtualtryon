@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { useCart } from '@/components/product/CartContext';
 import { motion } from "framer-motion";
 
@@ -70,8 +69,12 @@ export default function ProductDetailPage() {
         quantity: 1,
       });
       router.push("/checkout");
-    } catch (e: any) {
-      setBuyError(e.message || "Failed to buy product");
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setBuyError(e.message || "Failed to buy product");
+      } else {
+        setBuyError("Failed to buy product");
+      }
     } finally {
       setBuying(false);
     }
@@ -179,6 +182,7 @@ export default function ProductDetailPage() {
                 transition={{ delay: 0.1 }}
               >
                 <h2 className="text-xl font-bold mb-2">Virtual Try-On Result</h2>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={tryOnResult}
                   alt="Try-On Result"

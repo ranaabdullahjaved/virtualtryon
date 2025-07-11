@@ -35,7 +35,6 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -100,7 +99,6 @@ export default function OrdersPage() {
           <Button 
             onClick={() => {
               setLoading(true);
-              setRetryCount(prev => prev + 1);
               fetchOrders();
             }}
             className="flex items-center gap-2"
@@ -183,6 +181,7 @@ export default function OrdersPage() {
               <div className="space-y-4">
                 {order.items.map((item) => (
                   <div key={item.id} className="flex items-center gap-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={item.product.imageUrl[0]}
                       alt={item.product.name}

@@ -1,13 +1,12 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Button } from "../ui/button";
 import { Store, Package, ClipboardList, LogOut, LayoutDashboard } from "lucide-react";
 
 export default function AdminNavbar() {
   const pathname = usePathname();
-  const router = useRouter();
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-white/90 shadow flex items-center justify-between px-6 py-3 backdrop-blur-md">

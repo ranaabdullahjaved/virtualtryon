@@ -4,17 +4,15 @@ import { useCart } from '@/components/product/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
   const { data: session } = useSession();
-  const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', address: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [submittedCart, setSubmittedCart] = useState<any[]>([]);
+  const [submittedCart, setSubmittedCart] = useState<{ productId: string; name: string; price: number; quantity: number }[]>([]);
   const [submittedTotal, setSubmittedTotal] = useState(0);
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -59,8 +57,12 @@ export default function CheckoutPage() {
       setSubmitted(true);
       clearCart();
 
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
     } finally {
       setIsSubmitting(false);
     }

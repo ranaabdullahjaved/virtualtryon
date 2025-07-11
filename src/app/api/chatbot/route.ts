@@ -132,7 +132,7 @@ const FUNCTIONS = [
 // Function implementations
 async function getProductRecommendations(category: string, style?: string, price_range?: string) {
   try {
-    const whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       name: { contains: category, mode: 'insensitive' }
     };
 

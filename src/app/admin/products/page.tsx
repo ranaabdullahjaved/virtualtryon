@@ -9,9 +9,9 @@ import { Card } from "@/components/ui/card";
 export default function AdminProductsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [brands, setBrands] = useState([]);
+  const [brands, setBrands] = useState<any[]>([]);
   const [selectedBrand, setSelectedBrand] = useState("");
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [form, setForm] = useState({ name: "", description: "", price: "", imageUrl: "", stock: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -51,7 +51,11 @@ export default function AdminProductsPage() {
       setProducts(data.products);
       // Reset local stock edits
       const stockMap: { [id: string]: number } = {};
-      data.products.forEach((p: any) => { stockMap[p.id] = p.stock; });
+      data.products.forEach((p: unknown) => {
+        if (typeof p === 'object' && p !== null && 'id' in p && 'stock' in p) {
+          stockMap[(p as any).id] = (p as any).stock;
+        }
+      });
       setLocalStock(stockMap);
       setDirtyStock({});
     } catch (e) {
@@ -74,7 +78,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleAddProduct = async (e: any) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -226,26 +230,32 @@ export default function AdminProductsPage() {
           {error && <div className="text-red-500 mb-4">{error}</div>}
           {success && <div className="text-green-600 mb-4">{success}</div>}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {products.map((product: any) => (
-              <Card key={product.id} className="flex flex-col items-center p-6">
-                <img src={product.imageUrl?.[0]} alt={product.name} className="w-20 h-20 object-contain mb-4" />
-                <div className="font-bold text-lg mb-2">{product.name}</div>
-                <div className="text-gray-500 mb-2">{product.description}</div>
-                <div className="mb-2">${product.price}</div>
-                <div className="mb-2 flex items-center gap-2">
-                  <span>Stock:</span>
-                  <Button type="button" size="sm" variant="outline" disabled={loading || localStock[product.id] <= 0} onClick={() => handleLocalStockChange(product.id, localStock[product.id] - 1)}>-</Button>
-                  <span className="font-mono w-8 text-center">{localStock[product.id]}</span>
-                  <Button type="button" size="sm" variant="outline" disabled={loading} onClick={() => handleLocalStockChange(product.id, localStock[product.id] + 1)}>+</Button>
-                  <Button type="button" size="sm" variant="default" disabled={loading || !dirtyStock[product.id]} onClick={() => handleUpdateStock(product.id)}>
-                    Update Stock
+            {products.map((product: unknown) => {
+              if (typeof product !== 'object' || product === null || !('id' in product) || !('name' in product) || !('description' in product) || !('price' in product) || !('imageUrl' in product) || !('stock' in product)) {
+                return null;
+              }
+              const p = product as { id: string; name: string; description: string; price: number; imageUrl: string[]; stock: number };
+              return (
+                <Card key={p.id} className="flex flex-col items-center p-6">
+                  <img src={p.imageUrl?.[0]} alt={p.name} className="w-20 h-20 object-contain mb-4" />
+                  <div className="font-bold text-lg mb-2">{p.name}</div>
+                  <div className="text-gray-500 mb-2">{p.description}</div>
+                  <div className="mb-2">${p.price}</div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span>Stock:</span>
+                    <Button type="button" size="sm" variant="outline" disabled={loading || localStock[p.id] <= 0} onClick={() => handleLocalStockChange(p.id, localStock[p.id] - 1)}>-</Button>
+                    <span className="font-mono w-8 text-center">{localStock[p.id]}</span>
+                    <Button type="button" size="sm" variant="outline" disabled={loading} onClick={() => handleLocalStockChange(p.id, localStock[p.id] + 1)}>+</Button>
+                    <Button type="button" size="sm" variant="default" disabled={loading || !dirtyStock[p.id]} onClick={() => handleUpdateStock(p.id)}>
+                      Update Stock
+                    </Button>
+                  </div>
+                  <Button variant="destructive" onClick={() => handleDeleteProduct(p.id)} disabled={loading}>
+                    Delete
                   </Button>
-                </div>
-                <Button variant="destructive" onClick={() => handleDeleteProduct(product.id)} disabled={loading}>
-                  Delete
-                </Button>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         </>
       )}

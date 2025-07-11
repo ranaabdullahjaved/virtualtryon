@@ -30,7 +30,7 @@ export default function AdminBrandsPage() {
       const res = await fetch("/api/brands");
       if (!res.ok) throw new Error("Failed to fetch brands");
       setBrands(await res.json());
-    } catch (e) {
+    } catch {
       setError("Failed to fetch brands");
     } finally {
       setLoading(false);
@@ -49,7 +49,7 @@ export default function AdminBrandsPage() {
     }
   };
 
-  const handleAddBrand = async (e: any) => {
+  const handleAddBrand = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -79,7 +79,7 @@ export default function AdminBrandsPage() {
       setLogoUrl("");
       setSuccess("Brand added!");
       fetchBrands();
-    } catch (e) {
+    } catch {
       setError("Failed to add brand");
     } finally {
       setLoading(false);
@@ -96,7 +96,7 @@ export default function AdminBrandsPage() {
       if (!res.ok) throw new Error("Failed to delete brand");
       setSuccess("Brand deleted!");
       fetchBrands();
-    } catch (e) {
+    } catch {
       setError("Failed to delete brand");
     } finally {
       setLoading(false);
@@ -132,15 +132,24 @@ export default function AdminBrandsPage() {
       {error && <div className="text-red-500 mb-4">{error}</div>}
       {success && <div className="text-green-600 mb-4">{success}</div>}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {brands.map((brand: any) => (
-          <Card key={brand.id} className="flex flex-col items-center p-6">
-            <img src={brand.logoUrl} alt={brand.name} className="w-20 h-20 object-contain mb-4" />
-            <div className="font-bold text-lg mb-2">{brand.name}</div>
-            <Button variant="destructive" onClick={() => handleDeleteBrand(brand.id)} disabled={loading}>
-              Delete
-            </Button>
-          </Card>
-        ))}
+        {brands.map((brand: unknown) => {
+          // Add a type guard for brand
+          if (
+            typeof brand !== "object" || brand === null ||
+            !("id" in brand) || !("logoUrl" in brand) || !("name" in brand)
+          ) return null;
+          const b = brand as { id: string; logoUrl: string; name: string };
+          return (
+            <Card key={b.id} className="flex flex-col items-center p-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={b.logoUrl} alt={b.name} className="w-20 h-20 object-contain mb-4" />
+              <div className="font-bold text-lg mb-2">{b.name}</div>
+              <Button variant="destructive" onClick={() => handleDeleteBrand(b.id)} disabled={loading}>
+                Delete
+              </Button>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

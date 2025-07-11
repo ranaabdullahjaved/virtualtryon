@@ -83,7 +83,7 @@ export default function ChatbotButton() {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-    } catch (err) {
+    } catch {
       const errorMessage: Message = {
         from: 'ai',
         text: 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.',

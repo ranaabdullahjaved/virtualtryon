@@ -24,14 +24,14 @@ export default function AuthPage() {
   // Signup form state
   const [signupForm, setSignupForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
 
-  const handleLoginChange = (e: any) => {
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoginForm({ ...loginForm, [e.target.name]: e.target.value });
   };
-  const handleSignupChange = (e: any) => {
+  const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSignupForm({ ...signupForm, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = async (e: any) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setLoginError("");
@@ -71,7 +71,7 @@ export default function AuthPage() {
     }
   };
 
-  const handleSignup = async (e: any) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setSignupError("");

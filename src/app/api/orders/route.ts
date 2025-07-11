@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       select: { id: true },
     });
 
-    if (!user || !(user as any).id) {
+    if (!user || typeof user !== 'object' || user === null || !('id' in user) || typeof user.id !== 'string') {
       return new NextResponse("User not found", { status: 404 });
     }
 
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
     }
 
     // Check stock for all products first
-    for (const item of cart) {
+    for (const item of cart as Array<{ productId: string; quantity: number; name: string }>) {
       const product = await prisma.product.findUnique({ where: { id: item.productId } });
       if (!product || product.stock < item.quantity) {
         return new NextResponse(`Insufficient stock for ${item.name}`, { status: 400 });
@@ -101,12 +101,12 @@ export async function POST(req: Request) {
 
     const order = await prisma.order.create({
       data: {
-        userId: (user as any).id,
+        userId: user.id,
         totalAmount: parseFloat(totalAmount),
         shippingAddress: shippingAddress,
         status: "pending",
         items: {
-          create: cart.map((item: any) => ({
+          create: (cart as Array<{ productId: string; quantity: number; price: number }>).map(item => ({
             productId: item.productId,
             quantity: item.quantity,
             price: item.price,
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
     });
 
     // Decrement stock for each product
-    for (const item of cart) {
+    for (const item of cart as Array<{ productId: string; quantity: number }>) {
       await prisma.product.update({
         where: { id: item.productId },
         data: { stock: { decrement: item.quantity } },
@@ -127,8 +127,12 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(order, { status: 201 });
-  } catch (error: any) {
-    console.error("[ORDER_POST]", error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("[ORDER_POST]", error.message);
+    } else {
+      console.error("[ORDER_POST]", error);
+    }
     return new NextResponse("Internal error", { status: 500 });
   }
 } 

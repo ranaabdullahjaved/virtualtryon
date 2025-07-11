@@ -3,7 +3,7 @@ import { ShoppingBag } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useCart } from '../product/CartContext';
 
-export default function CartButton({ cartOpen, setCartOpen }: { cartOpen: boolean; setCartOpen: (open: boolean) => void }) {
+export default function CartButton({ setCartOpen }: { setCartOpen: (open: boolean) => void }) {
   const { cart } = useCart();
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 

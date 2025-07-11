@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
           });
 
           if (!response.ok) {
-            const error = await response.text();
+            await response.text();
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'OpenAI API error' })}\n\n`));
             controller.close();
             return;
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
                       content: parsed.choices[0].delta.content 
                     })}\n\n`));
                   }
-                } catch (e) {
+                } catch {
                   // Skip invalid JSON
                 }
               }

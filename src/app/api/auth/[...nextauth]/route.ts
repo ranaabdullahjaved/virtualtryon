@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }: { token: JWT; user?: User }) {
       // On first login, user is present
       if (user) {
-        token.role = (user as any).role || "customer";
+        token.role = (user as User & { role?: string }).role || "customer";
       } else if (!token.role && token.email) {
         const dbUser = await prisma.user.findUnique({ where: { email: token.email as string } });
         token.role = dbUser?.role || "customer";
@@ -61,8 +61,8 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session?.user) {
-        (session.user as any).role = token.role;
-        (session.user as any).id = token.sub;
+        (session.user as typeof session.user & { role?: string; id?: string }).role = token.role;
+        (session.user as typeof session.user & { role?: string; id?: string }).id = typeof token.sub === 'string' ? token.sub : undefined;
       }
       return session;
     },

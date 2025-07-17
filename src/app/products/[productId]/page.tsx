@@ -204,7 +204,7 @@ export default function ProductDetailPage() {
                       link.click();
                       document.body.removeChild(link);
                       window.URL.revokeObjectURL(url);
-                    } catch (err) {
+                    } catch  {
                       alert('Failed to download image.');
                     }
                   }}

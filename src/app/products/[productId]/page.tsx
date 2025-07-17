@@ -188,6 +188,30 @@ export default function ProductDetailPage() {
                   alt="Try-On Result"
                   className="w-72 h-72 object-contain rounded-lg border shadow-md"
                 />
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(tryOnResult, { mode: 'cors' });
+                      const blob = await response.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download =
+                        product?.name
+                          ? `${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_tryon.png`
+                          : 'tryon_result.png';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(url);
+                    } catch (err) {
+                      alert('Failed to download image.');
+                    }
+                  }}
+                  className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition-colors cursor-pointer"
+                >
+                  Download Image
+                </button>
               </motion.div>
             )}
           </motion.div>
